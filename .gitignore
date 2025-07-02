@@ -51,8 +51,8 @@ Icon?
 com.apple.timemachine.donotpresent
 
 # IDEs
-.idea/   # WebStorm project files
-.vscode/ # VSCode project files (if you ever use it)
+.idea/
+.vscode/
 
 # Editor swap/lock files
 *.swp

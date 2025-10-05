@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import Dashboard from '../../app/dashboard/page';
+import Dashboard from '../../app/page';
 
 describe('Dashboard', () => {
   it('renders dashboard heading', () => {

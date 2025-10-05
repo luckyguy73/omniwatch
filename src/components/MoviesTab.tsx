@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function MoviesTab({ theme }: { theme: string }) {
   return (
     <div className={theme === "dark" ? "bg-gray-900 rounded-lg shadow p-6" : "bg-white rounded-lg shadow p-6"}>

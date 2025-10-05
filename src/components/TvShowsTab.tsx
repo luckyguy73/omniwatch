@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function TvShowsTab({ theme }: { theme: string }) {
   return (
     <div>

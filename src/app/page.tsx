@@ -1,12 +1,45 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TvShowsTab from "../components/TvShowsTab";
 import MoviesTab from "../components/MoviesTab";
+import { seedTestData, fetchItemsByType } from "../lib/firestoreTest";
+
+// Define the dashboard item type
+export type DashboardItem = {
+  id: string;
+  type: "tv_show" | "movie";
+  title: string;
+  body: string;
+};
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("tv");
   const [theme, setTheme] = useState("light");
+  const [tvShows, setTvShows] = useState<DashboardItem[]>([]);
+  const [movies, setMovies] = useState<DashboardItem[]>([]);
+
+  useEffect(() => {
+    // Skip Firestore calls in test environment to keep unit tests fast and isolated
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    async function loadData() {
+      const tv = await fetchItemsByType("tv_show");
+      const mv = await fetchItemsByType("movie");
+      if (tv.length === 0 && mv.length === 0) {
+        await seedTestData();
+        setTimeout(loadData, 1000);
+        return;
+      }
+      setTvShows(tv);
+      setMovies(mv);
+    }
+    loadData()
+      .then(() => console.log('Data loaded'))
+      .catch(err => console.error('Error loading data:', err));
+  }, []);
 
   const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
 
@@ -75,7 +108,7 @@ export default function Dashboard() {
             (theme === "dark" ? "bg-gray-900" : "bg-white")
           }
         >
-          {activeTab === "tv" ? <TvShowsTab theme={theme} /> : <MoviesTab theme={theme} />}
+          {activeTab === "tv" ? <TvShowsTab theme={theme} items={tvShows} /> : <MoviesTab theme={theme} items={movies} />}
         </div>
       </div>
     </div>

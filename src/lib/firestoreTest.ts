@@ -1,6 +1,6 @@
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where, DocumentData } from "firebase/firestore";
-import type { DashboardItem } from "../app/page";
+import type { DashboardItem } from "@/app/page";
 
 export async function seedTestData() {
   // Write two test records

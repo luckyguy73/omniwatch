@@ -8,12 +8,13 @@ describe('Dashboard', () => {
     expect(screen.getByText(/Omni Dashboard/i)).toBeInTheDocument();
   });
 
-  it('toggles theme between light and dark', () => {
+  it('toggles theme between dark and light', () => {
     render(<Dashboard />);
     const toggleButton = screen.getByLabelText('Toggle light/dark mode');
-    expect(screen.getByText('☀️')).toBeInTheDocument();
-    fireEvent.click(toggleButton);
+    // default is dark
     expect(screen.getByText('🌙')).toBeInTheDocument();
+    fireEvent.click(toggleButton);
+    expect(screen.getByText('☀️')).toBeInTheDocument();
   });
 
   it('switches between TV Shows and Movies tabs', () => {

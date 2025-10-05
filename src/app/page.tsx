@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import TvShowsTab from "../components/TvShowsTab";
 import MoviesTab from "../components/MoviesTab";
-import { seedTestData, fetchItemsByType } from "../lib/firestoreTest";
+import { fetchMovies, fetchTvShows } from "../lib/data";
 
 // Define the dashboard item type
 export type DashboardItem = {
@@ -15,28 +15,26 @@ export type DashboardItem = {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("tv");
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   const [tvShows, setTvShows] = useState<DashboardItem[]>([]);
   const [movies, setMovies] = useState<DashboardItem[]>([]);
+
+  async function reload() {
+    const [tv, mv] = await Promise.all([
+      fetchTvShows(),
+      fetchMovies(),
+    ]);
+    // Casting to any to keep compatibility with current component prop types
+    setTvShows(tv as any);
+    setMovies(mv as any);
+  }
 
   useEffect(() => {
     // Skip Firestore calls in test environment to keep unit tests fast and isolated
     if (process.env.NODE_ENV === 'test') {
       return;
     }
-
-    async function loadData() {
-      const tv = await fetchItemsByType("tv_show");
-      const mv = await fetchItemsByType("movie");
-      if (tv.length === 0 && mv.length === 0) {
-        await seedTestData();
-        setTimeout(loadData, 1000);
-        return;
-      }
-      setTvShows(tv);
-      setMovies(mv);
-    }
-    loadData()
+    reload()
       .then(() => console.log('Data loaded'))
       .catch(err => console.error('Error loading data:', err));
   }, []);
@@ -108,7 +106,7 @@ export default function Dashboard() {
             (theme === "dark" ? "bg-gray-900" : "bg-white")
           }
         >
-          {activeTab === "tv" ? <TvShowsTab theme={theme} items={tvShows} /> : <MoviesTab theme={theme} items={movies} />}
+          {activeTab === "tv" ? <TvShowsTab theme={theme} items={tvShows} onDataChanged={reload} /> : <MoviesTab theme={theme} items={movies} onDataChanged={reload} />}
         </div>
       </div>
     </div>

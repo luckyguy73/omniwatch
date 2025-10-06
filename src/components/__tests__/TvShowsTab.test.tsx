@@ -138,3 +138,48 @@ describe('TvShowsTab', () => {
     spy.mockRestore();
   });
 });
+
+// Additional coverage tests for TV search suggestions and year display
+
+describe('TvShowsTab - search suggestions UX', () => {
+  it('limits search suggestions to 10 results', async () => {
+    const { searchTvShows } = await import('../../lib/tmdb/tmdbClient');
+    (searchTvShows as unknown as { mockResolvedValueOnce: (v: any) => void }).mockResolvedValueOnce({
+      results: Array.from({ length: 12 }, (_, i) => ({ tmdbId: i + 1, title: `Show ${i + 1}` }))
+    });
+
+    vi.useFakeTimers();
+    render(<TvShowsTab theme="light" />);
+    fireEvent.change(screen.getByPlaceholderText(/Search TV shows to add/i), { target: { value: 's' } });
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    vi.useRealTimers();
+
+    const addButtons = await screen.findAllByRole('button', { name: 'Add' });
+    expect(addButtons.length).toBe(10);
+  });
+
+  it('displays the year next to the title in suggestions when provided', async () => {
+    const { searchTvShows } = await import('../../lib/tmdb/tmdbClient');
+    (searchTvShows as unknown as { mockResolvedValueOnce: (v: any) => void }).mockResolvedValueOnce({
+      results: [
+        { tmdbId: 200, title: 'Severance', overview: '...', imageUrl: '', year: 2022 },
+      ]
+    });
+
+    vi.useFakeTimers();
+    render(<TvShowsTab theme="light" />);
+    fireEvent.change(screen.getByPlaceholderText(/Search TV shows to add/i), { target: { value: 'sev' } });
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    vi.useRealTimers();
+
+    expect(await screen.findByText('Severance (2022)')).toBeInTheDocument();
+  });
+});

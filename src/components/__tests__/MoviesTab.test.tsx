@@ -145,3 +145,30 @@ describe('MoviesTab', () => {
     spy.mockRestore();
   });
 });
+
+
+// Additional coverage tests for live search behavior
+// Note: we rely on the existing vi.mock at top of file, and override per-test with mockResolvedValueOnce
+
+describe('MoviesTab - live search limits and UX', () => {
+  it('limits search suggestions to 10 results', async () => {
+    const { searchMovies } = await import('../../lib/tmdb/tmdbClient');
+    (searchMovies as unknown as { mockResolvedValueOnce: (v: any) => void }).mockResolvedValueOnce({
+      results: Array.from({ length: 15 }, (_, i) => ({ tmdbId: i + 1, title: `Title ${i + 1}` }))
+    });
+
+    vi.useFakeTimers();
+    render(<MoviesTab theme="light" />);
+    fireEvent.change(screen.getByPlaceholderText(/Search movies to add/i), { target: { value: 't' } });
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    vi.useRealTimers();
+
+    // There should be only 10 Add buttons for suggestions
+    const addButtons = await screen.findAllByRole('button', { name: 'Add' });
+    expect(addButtons.length).toBe(10);
+  });
+});

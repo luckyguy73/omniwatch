@@ -141,6 +141,7 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
                   <button
                     type="button"
                     aria-label="Add"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleAdd(r.tmdbId)}
                     className={
                       `px-3 py-1 rounded text-sm font-medium border bg-green-600 text-white border-green-600 hover:bg-green-700`

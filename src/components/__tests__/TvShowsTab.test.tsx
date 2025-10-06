@@ -224,3 +224,25 @@ describe('TvShowsTab - rating display', () => {
     expect(ratingNodes.length).toBeGreaterThan(0);
   });
 });
+
+
+
+describe('TvShowsTab - add from Trending', () => {
+  it('adds a trending TV show when clicking + and shows toast', async () => {
+    const { fetchTvShowFromTMDB } = await import('../../lib/tmdb/tmdbClient');
+    (fetchTvShowFromTMDB as unknown as { mockResolvedValueOnce: (v: any) => void }).mockResolvedValueOnce({ tmdbId: 200, title: 'Trending Show' });
+
+    render(<TvShowsTab theme="light" />);
+    const input = screen.getByPlaceholderText(/Search TV shows to add/i);
+    fireEvent.focus(input);
+
+    await screen.findByText('Trending');
+    await screen.findByText('Trending Show');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Added: Trending Show');
+    });
+  });
+});

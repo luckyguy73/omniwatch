@@ -217,3 +217,26 @@ describe('MoviesTab - rating display', () => {
     expect(ratingNodes.length).toBeGreaterThan(0);
   });
 });
+
+
+
+describe('MoviesTab - add from Trending', () => {
+  it('adds a trending movie when clicking + and shows toast', async () => {
+    const { fetchMovieFromTMDB } = await import('../../lib/tmdb/tmdbClient');
+    (fetchMovieFromTMDB as unknown as { mockResolvedValueOnce: (v: any) => void }).mockResolvedValueOnce({ tmdbId: 2, title: 'Dune' });
+
+    render(<MoviesTab theme="light" />);
+    const input = screen.getByPlaceholderText(/Search movies to add/i);
+    fireEvent.focus(input);
+
+    // Trending item should appear from mocked fetchTrendingMovies
+    await screen.findByText('Trending');
+    await screen.findByText('Dune');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Added: Dune');
+    });
+  });
+});

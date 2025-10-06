@@ -153,7 +153,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
                       aria-label="Remove"
                       onClick={() => handleRemove(item)}
                       className={
-                        `w-8 h-8 flex items-center justify-center rounded-sm border text-white bg-red-600 border-white hover:bg-red-700`
+                        `w-4 h-4 md:w-6 md:h-6 flex items-center justify-center rounded-sm border text-white bg-red-600 border-white hover:bg-red-700 shrink-0 text-xs md:text-sm leading-none`
                       }
                     >X</button>
                   ) : null}

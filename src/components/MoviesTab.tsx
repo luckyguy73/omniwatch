@@ -58,7 +58,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
   }
 
   return (
-    <div className={theme === "dark" ? "bg-gray-900 rounded-lg shadow p-6" : "bg-white rounded-lg shadow p-6"}>
+    <div>
       <h2 className={`text-xl font-semibold mb-4 ${theme === "dark" ? "text-blue-200" : "text-gray-800"}`}>Your Movies</h2>
 
       {toast ? (
@@ -153,7 +153,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
                       aria-label="Remove"
                       onClick={() => handleRemove(item)}
                       className={
-                        `w-6 h-6 flex items-center justify-center rounded-sm border text-white bg-red-600 border-white hover:bg-red-700`
+                        `w-8 h-8 flex items-center justify-center rounded-sm border text-white bg-red-600 border-white hover:bg-red-700`
                       }
                     >X</button>
                   ) : null}

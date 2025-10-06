@@ -44,7 +44,7 @@ export default function Dashboard() {
   return (
     <div
       className={
-        `min-h-screen p-8 transition-colors duration-300 ` +
+        `min-h-screen p-4 sm:p-6 md:p-8 transition-colors duration-300 ` +
         (theme === "dark"
           ? "bg-gradient-to-br from-gray-900 to-gray-800"
           : "bg-gradient-to-br from-blue-50 to-gray-100")
@@ -54,7 +54,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-8">
           <h1
             className={
-              `text-4xl font-bold ${theme === "dark" ? "text-blue-200" : "text-blue-700"}`
+              `text-3xl sm:text-4xl font-bold ${theme === "dark" ? "text-blue-200" : "text-blue-700"}`
             }
           >
             Omni Dashboard

@@ -153,7 +153,7 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
                       aria-label="Remove"
                       onClick={() => handleRemove(item)}
                       className={
-                        `w-6 h-6 flex items-center justify-center rounded-sm border text-white bg-red-600 border-white hover:bg-red-700`
+                        `w-8 h-8 flex items-center justify-center rounded-sm border text-white bg-red-600 border-white hover:bg-red-700`
                       }
                     >X</button>
                   ) : null}

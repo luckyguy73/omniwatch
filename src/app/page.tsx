@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import TvShowsTab from "../components/TvShowsTab";
 import MoviesTab from "../components/MoviesTab";
-import { fetchMovies, fetchTvShows } from "../lib/data";
+import { fetchMovies, fetchTvShows } from "../lib/firestore/data";
 
 // Define the dashboard item type
 export type DashboardItem = {

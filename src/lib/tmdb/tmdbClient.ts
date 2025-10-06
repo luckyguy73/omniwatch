@@ -4,14 +4,14 @@ export async function fetchMovieFromTMDB(id: number) {
     const text = await res.text();
     throw new Error(`TMDB fetch failed: ${res.status} ${text}`);
   }
-  return res.json() as Promise<{
+  return (await res.json()) as {
     tmdbId: number;
     title: string;
     year?: number;
     overview?: string;
     topCast?: string[];
     imageUrl?: string;
-  }>;
+  };
 }
 
 export async function searchMovies(query: string) {
@@ -20,7 +20,7 @@ export async function searchMovies(query: string) {
     const text = await res.text();
     throw new Error(`TMDB search failed: ${res.status} ${text}`);
   }
-  return res.json() as Promise<{
+  return (await res.json()) as {
     results: Array<{
       tmdbId: number;
       title: string;
@@ -28,7 +28,7 @@ export async function searchMovies(query: string) {
       overview?: string;
       imageUrl?: string;
     }>;
-  }>;
+  };
 }
 
 export async function fetchTvShowFromTMDB(id: number) {
@@ -37,12 +37,12 @@ export async function fetchTvShowFromTMDB(id: number) {
     const text = await res.text();
     throw new Error(`TMDB TV fetch failed: ${res.status} ${text}`);
   }
-  return res.json() as Promise<{
+  return (await res.json()) as {
     tmdbId: number;
     title: string;
     description?: string;
     imageUrl?: string;
-  }>;
+  };
 }
 
 export async function searchTvShows(query: string) {
@@ -51,12 +51,12 @@ export async function searchTvShows(query: string) {
     const text = await res.text();
     throw new Error(`TMDB TV search failed: ${res.status} ${text}`);
   }
-  return res.json() as Promise<{
+  return (await res.json()) as {
     results: Array<{
       tmdbId: number;
       title: string;
       overview?: string;
       imageUrl?: string;
     }>;
-  }>;
+  };
 }

@@ -1,14 +1,15 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import MoviesTab from '../MoviesTab';
 import { vi } from 'vitest';
+import { searchMovies } from '../../lib/tmdb/tmdbClient';
 
-vi.mock('../../lib/models', () => ({
-  setMovieFavorite: vi.fn(() => Promise.resolve()),
+vi.mock('../../lib/firestore/models', () => ({
+  deleteMovie: vi.fn(() => Promise.resolve()),
   upsertMovie: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock('../../lib/tmdbClient', () => ({
+vi.mock('../../lib/tmdb/tmdbClient', () => ({
   searchMovies: vi.fn(async () => ({
     results: [
       { tmdbId: 1, title: 'Inception', overview: 'A mind-bending heist', imageUrl: '' },
@@ -23,29 +24,45 @@ describe('MoviesTab', () => {
     expect(screen.getByText(/Your Movies/i)).toBeInTheDocument();
   });
 
-  it('shows Favorite button for items and toggles toast on click', async () => {
+  it('clears search when clicking the X button', () => {
+    render(<MoviesTab theme="light" />);
+    const input = screen.getByPlaceholderText(/Search movies to add/i) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'abc' } });
+    expect(input.value).toBe('abc');
+    const clearBtn = screen.getByRole('button', { name: /clear search/i });
+    fireEvent.click(clearBtn);
+    expect(input.value).toBe('');
+  });
+
+
+  it('removes a movie and shows a toast', async () => {
     render(
       <MoviesTab
         theme="light"
-        items={[{ id: 'm1', title: 'Inception', tmdbId: 1, isFavorite: false }]}
+        items={[{ id: 'm1', title: 'Inception', tmdbId: 1 }]}
       />
     );
 
-    const favBtn = screen.getByRole('button', { name: /favorite/i });
-    fireEvent.click(favBtn);
+    const removeBtn = screen.getByRole('button', { name: /remove/i });
+    fireEvent.click(removeBtn);
 
     await screen.findByRole('status');
-    expect(screen.getByText(/Favorited: Inception/i)).toBeInTheDocument();
+    expect(screen.getByText(/Removed: Inception/i)).toBeInTheDocument();
   });
 
   it('searches and adds a movie, showing a toast', async () => {
+    vi.useFakeTimers();
     render(<MoviesTab theme="light" />);
 
     const input = screen.getByPlaceholderText(/Search movies to add/i);
     fireEvent.change(input, { target: { value: 'incep' } });
 
-    const submit = screen.getByRole('button', { name: /search/i });
-    fireEvent.click(submit);
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    // Return to real timers so Testing Library's async utilities work
+    vi.useRealTimers();
 
     await screen.findByText('Inception');
 
@@ -54,5 +71,77 @@ describe('MoviesTab', () => {
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Added: Inception');
     });
+  });
+
+  it('renders empty state when no items', () => {
+    render(<MoviesTab theme="dark" items={[]} />);
+    expect(screen.getByText('No movies found.')).toBeInTheDocument();
+  });
+
+  it('sorts items alphabetically by title (case-insensitive)', () => {
+    const items = [
+      { id: '1', title: 'zulu' },
+      { id: '2', title: 'Alpha' },
+      { id: '3', title: 'mId' },
+    ];
+    render(<MoviesTab theme="light" items={items as any} />);
+
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    const texts = headings.map(h => h.textContent);
+    // Should be Alpha, mId, zulu (year portion may be absent)
+    expect(texts?.[0]?.toLowerCase().startsWith('alpha')).toBe(true);
+    expect(texts?.[1]?.toLowerCase().startsWith('mid')).toBe(true);
+    expect(texts?.[2]?.toLowerCase().startsWith('zulu')).toBe(true);
+  });
+
+  it('renders year and top cast when provided', () => {
+    const items = [
+      { id: '1', title: 'Inception', year: 2010, topCast: ['Leonardo DiCaprio', 'Joseph Gordon-Levitt'] },
+    ];
+    render(<MoviesTab theme="light" items={items as any} />);
+
+    expect(screen.getByRole('heading', { name: /Inception \(2010\)/ })).toBeInTheDocument();
+    const nodes = screen.getAllByText((content, element) =>
+          (element?.textContent || '').includes('Top cast: Leonardo DiCaprio, Joseph Gordon-Levitt')
+        );
+        expect(nodes.length).toBeGreaterThan(0);
+  });
+
+  it('shows error message on failed search', async () => {
+    // Arrange next call to reject
+    (searchMovies as unknown as { mockRejectedValueOnce: (e: any) => void }).mockRejectedValueOnce(new Error('boom'));
+
+    vi.useFakeTimers();
+    render(<MoviesTab theme="light" />);
+    fireEvent.change(screen.getByPlaceholderText(/Search movies to add/i), { target: { value: 'x' } });
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    vi.useRealTimers();
+    await screen.findByText('boom');
+  });
+
+  it('schedules auto-dismiss toast after 3 seconds', async () => {
+    const spy = vi.spyOn(global, 'setTimeout' as any);
+    render(
+      <MoviesTab
+        theme="light"
+        items={[{ id: 'm1', title: 'Inception', tmdbId: 1 }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /remove/i }));
+
+    // Toast appears immediately
+    await screen.findByRole('status');
+
+    // Ensure auto-dismiss is scheduled for 3000ms
+    expect(spy).toHaveBeenCalled();
+    const any3000 = spy.mock.calls.some((c) => typeof c[1] === 'number' && c[1] === 3000);
+    expect(any3000).toBe(true);
+
+    spy.mockRestore();
   });
 });

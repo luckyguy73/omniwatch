@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server";
+import { TMDB_BASE, getApiKey, posterUrl, requireId, topCastFromCredits, yearFromReleaseDate, HttpError } from "../_shared";
 
 export async function GET(request: Request) {
   try {
-    const url = new URL(request.url);
-    const id = url.searchParams.get("id");
-    if (!id) {
-      return NextResponse.json({ error: "Missing required query param: id" }, { status: 400 });
-    }
-
-    const apiKey = process.env.TMDB_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "TMDB_API_KEY is not set on the server" }, { status: 500 });
-    }
-
-    const base = "https://api.themoviedb.org/3";
+    const id = requireId(request);
+    const apiKey = getApiKey();
 
     const [detailsRes, creditsRes] = await Promise.all([
-      fetch(`${base}/movie/${id}?api_key=${apiKey}&language=en-US`, { next: { revalidate: 60 * 60 } }),
-      fetch(`${base}/movie/${id}/credits?api_key=${apiKey}&language=en-US`, { next: { revalidate: 60 * 60 } }),
+      fetch(`${TMDB_BASE}/movie/${id}?api_key=${apiKey}&language=en-US`, { next: { revalidate: 60 * 60 } }),
+      fetch(`${TMDB_BASE}/movie/${id}/credits?api_key=${apiKey}&language=en-US`, { next: { revalidate: 60 * 60 } }),
     ]);
 
     if (!detailsRes.ok) {
@@ -32,29 +23,20 @@ export async function GET(request: Request) {
     const details = await detailsRes.json();
     const credits = await creditsRes.json();
 
-    const topCast: string[] = Array.isArray(credits?.cast)
-      ? credits.cast.slice(0, 3).map((c: any) => c?.name).filter(Boolean)
-      : [];
-
-    const year = typeof details?.release_date === "string" && details.release_date.length >= 4
-      ? Number(details.release_date.slice(0, 4))
-      : undefined;
-
-    const imageUrl = typeof details?.poster_path === "string" && details.poster_path
-      ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
-      : undefined;
-
     const payload = {
       tmdbId: details?.id ?? Number(id),
       title: details?.title ?? details?.name ?? "Untitled",
-      year,
+      year: yearFromReleaseDate(details?.release_date),
       overview: details?.overview ?? "",
-      topCast,
-      imageUrl,
+      topCast: topCastFromCredits(credits, 3),
+      imageUrl: posterUrl(details?.poster_path, "w500"),
     };
 
     return NextResponse.json(payload, { status: 200 });
   } catch (err: any) {
+    if (err instanceof HttpError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     return NextResponse.json({ error: err?.message ?? "Unknown server error" }, { status: 500 });
   }
 }

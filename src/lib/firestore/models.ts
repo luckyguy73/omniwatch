@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc, updateDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
 
 export type MovieDoc = {
   tmdbId: number;
@@ -49,10 +49,9 @@ export async function upsertMovie(docData: MovieDoc): Promise<void> {
   }
 }
 
-export async function setMovieFavorite(tmdbId: number, isFavorite: boolean): Promise<void> {
+export async function deleteMovie(tmdbId: number): Promise<void> {
   const ref = doc(collection(db, "movies"), String(tmdbId));
-  const now = serverTimestamp();
-  await updateDoc(ref, { isFavorite, updatedAt: now });
+  await deleteDoc(ref);
 }
 
 export async function upsertTvShow(docData: TvShowDoc): Promise<void> {
@@ -64,4 +63,10 @@ export async function upsertTvShow(docData: TvShowDoc): Promise<void> {
   } else {
     await setDoc(ref, { ...docData, createdAt: now, updatedAt: now });
   }
+}
+
+
+export async function deleteTvShow(tmdbId: number): Promise<void> {
+  const ref = doc(collection(db, "tv_shows"), String(tmdbId));
+  await deleteDoc(ref);
 }

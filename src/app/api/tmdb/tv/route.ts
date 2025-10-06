@@ -19,7 +19,14 @@ export async function GET(request: Request) {
       title: details?.name ?? "Untitled",
       description: details?.overview ?? "",
       imageUrl: posterUrl(details?.poster_path, "w500"),
-    };
+      rating: typeof details?.vote_average === 'number' ? Number(details.vote_average) : undefined,
+      // Additional helpful metadata for TV shows
+      networks: Array.isArray(details?.networks) ? details.networks.map((n: any) => n?.name).filter(Boolean) : [],
+      status: details?.status ?? undefined,
+      firstAirDate: typeof details?.first_air_date === 'string' ? details.first_air_date : undefined,
+      lastAirDate: typeof details?.last_air_date === 'string' ? details.last_air_date : undefined,
+      nextAirDate: typeof details?.next_episode_to_air?.air_date === 'string' ? details.next_episode_to_air.air_date : undefined,
+    } as const;
 
     return NextResponse.json(payload, { status: 200 });
   } catch (err: any) {

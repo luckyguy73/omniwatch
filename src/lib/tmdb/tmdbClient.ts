@@ -11,6 +11,7 @@ export async function fetchMovieFromTMDB(id: number) {
     overview?: string;
     topCast?: string[];
     imageUrl?: string;
+    rating?: number;
   };
 }
 
@@ -42,6 +43,12 @@ export async function fetchTvShowFromTMDB(id: number) {
     title: string;
     description?: string;
     imageUrl?: string;
+    rating?: number;
+    networks?: string[];
+    status?: string;
+    firstAirDate?: string;
+    lastAirDate?: string;
+    nextAirDate?: string;
   };
 }
 
@@ -58,5 +65,45 @@ export async function searchTvShows(query: string) {
       overview?: string;
       imageUrl?: string;
     }>;
+  };
+}
+
+export async function fetchTrendingMovies(window: 'day' | 'week' = 'day') {
+  const res = await fetch(`/api/tmdb/trending?type=movie&window=${window}`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`TMDB trending movies failed: ${res.status} ${text}`);
+  }
+  return (await res.json()) as {
+    results: Array<{
+      tmdbId: number;
+      title: string;
+      overview?: string;
+      year?: number;
+      imageUrl?: string;
+      mediaType?: string;
+      popularity?: number;
+      voteAverage?: number;
+    }>;
+  };
+}
+
+export async function fetchTrendingTvShows(window: 'day' | 'week' = 'day') {
+  const res = await fetch(`/api/tmdb/trending?type=tv&window=${window}`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`TMDB trending TV failed: ${res.status} ${text}`);
+  }
+  return (await res.json()) as {
+    results: Array<{
+      tmdbId: number;
+      title: string;
+      overview?: string;
+      year?: number;
+      imageUrl?: string;
+      mediaType?: string;
+      popularity?: number;
+      voteAverage?: number;
+    }>; 
   };
 }

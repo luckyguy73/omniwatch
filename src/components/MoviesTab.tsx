@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { searchMovies, fetchMovieFromTMDB } from "@/lib/tmdb/tmdbClient";
+import { searchMovies, fetchMovieFromTMDB, fetchTrendingMovies } from "@/lib/tmdb/tmdbClient";
 import { upsertMovie, deleteMovie } from "@/lib/firestore/models";
 
 export default function MoviesTab({ theme, items = [], onDataChanged }: { theme: string; items?: any[]; onDataChanged?: () => void }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -17,10 +18,28 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
   useEffect(() => {
     const term = q.trim();
     setError(null);
+
+    // If no term and input is focused, show trending movies
     if (!term) {
-      setResults([]);
+      if (focused) {
+        (async () => {
+          setLoading(true);
+          try {
+            const data = await fetchTrendingMovies('day');
+            setResults((data.results || []).slice(0, 10));
+          } catch (err: any) {
+            setError(err?.message ?? 'Trending fetch failed');
+            setResults([]);
+          } finally {
+            setLoading(false);
+          }
+        })();
+      } else {
+        setResults([]);
+      }
       return;
     }
+
     const h = setTimeout(async () => {
       setLoading(true);
       try {
@@ -33,7 +52,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
       }
     }, 300);
     return () => clearTimeout(h);
-  }, [q]);
+  }, [q, focused]);
 
   async function handleAdd(tmdbId: number) {
     try {
@@ -76,6 +95,16 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setQ("");
+                setResults([]);
+                setError(null);
+              }
+            }}
             placeholder="Search movies to add..."
             className={
               `w-full pr-3 ${q.trim().length > 0 || results.length > 0 ? 'py-3 pl-9' : 'py-2 pl-9'} rounded border ` +
@@ -97,21 +126,13 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
             </button>
           ) : null}
         </div>
-        {loading ? (
-          <div className={
-            `ml-2 px-3 py-2 text-sm rounded border ` +
-            (theme === "dark"
-              ? "bg-gray-800 text-blue-200 border-gray-700"
-              : "bg-gray-100 text-blue-700 border-gray-300")
-          }>Searching...</div>
-        ) : null}
       </div>
       {error ? (
         <div className={theme === "dark" ? "text-red-300 mb-2" : "text-red-600 mb-2"}>{error}</div>
       ) : null}
       {results.length > 0 ? (
         <div className="mb-6">
-          <h3 className={theme === "dark" ? "text-blue-200 font-semibold mb-2" : "text-gray-800 font-semibold mb-2"}>Search Results</h3>
+          <h3 className={theme === "dark" ? "text-blue-200 font-semibold mb-2" : "text-gray-800 font-semibold mb-2"}>{(q.trim().length === 0 && focused) ? 'Trending' : 'Search Results'}</h3>
           <ul className="space-y-2">
             {results.map((r) => (
               <li key={r.tmdbId} className={theme === "dark" ? "bg-gray-800 rounded p-3" : "bg-gray-100 rounded p-3 text-gray-800"}>
@@ -155,6 +176,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
                       className={
                         `w-4 h-4 md:w-6 md:h-6 flex items-center justify-center rounded-sm border text-white bg-red-600 border-white hover:bg-red-700 shrink-0 text-xs md:text-sm leading-none`
                       }
+                      style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", Arial, sans-serif' }}
                     >X</button>
                   ) : null}
                   <h3 className="text-lg font-bold">
@@ -163,6 +185,9 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
                   </h3>
                 </div>
                 <p className="mb-2">{item.overview ?? item.body}</p>
+                {typeof item.rating === 'number' ? (
+                  <p className="text-sm opacity-80"><span className="font-semibold">Rating:</span> {item.rating}/10</p>
+                ) : null}
                 {Array.isArray(item.topCast) && item.topCast.length > 0 ? (
                   <p className="text-sm opacity-80">
                     <span className="font-semibold">Top cast:</span> {item.topCast.join(", ")}

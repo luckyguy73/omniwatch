@@ -30,6 +30,7 @@ export async function GET(request: Request) {
       overview: details?.overview ?? "",
       topCast: topCastFromCredits(credits, 3),
       imageUrl: posterUrl(details?.poster_path, "w500"),
+      rating: typeof details?.vote_average === 'number' ? Number(details.vote_average) : undefined,
     };
 
     return NextResponse.json(payload, { status: 200 });

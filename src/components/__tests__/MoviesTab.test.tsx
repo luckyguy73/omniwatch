@@ -16,6 +16,9 @@ vi.mock('../../lib/tmdb/tmdbClient', () => ({
     ],
   })),
   fetchMovieFromTMDB: vi.fn(async () => ({ tmdbId: 1, title: 'Inception' })),
+  fetchTrendingMovies: vi.fn(async () => ({
+    results: [ { tmdbId: 2, title: 'Dune' } ]
+  })),
 }));
 
 describe('MoviesTab', () => {
@@ -147,6 +150,15 @@ describe('MoviesTab', () => {
 });
 
 
+it('clears search when pressing Escape key', () => {
+  render(<MoviesTab theme="light" />);
+  const input = screen.getByPlaceholderText(/Search movies to add/i) as HTMLInputElement;
+  fireEvent.change(input, { target: { value: 'abc' } });
+  expect(input.value).toBe('abc');
+  fireEvent.keyDown(input, { key: 'Escape', code: 'Escape' });
+  expect(input.value).toBe('');
+});
+
 // Additional coverage tests for live search behavior
 // Note: we rely on the existing vi.mock at top of file, and override per-test with mockResolvedValueOnce
 
@@ -170,5 +182,38 @@ describe('MoviesTab - live search limits and UX', () => {
     // There should be only 10 Add buttons for suggestions
     const addButtons = await screen.findAllByRole('button', { name: 'Add' });
     expect(addButtons.length).toBe(10);
+  });
+});
+
+
+
+describe('MoviesTab - Trending vs Search headings', () => {
+  it('shows Trending when input is focused and empty', async () => {
+    render(<MoviesTab theme="light" />);
+    const input = screen.getByPlaceholderText(/Search movies to add/i);
+    fireEvent.focus(input);
+    expect(await screen.findByText('Trending')).toBeInTheDocument();
+  });
+
+  it('shows Search Results after typing', async () => {
+    vi.useFakeTimers();
+    render(<MoviesTab theme="light" />);
+    const input = screen.getByPlaceholderText(/Search movies to add/i);
+    fireEvent.change(input, { target: { value: 'inc' } });
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    vi.useRealTimers();
+    expect(await screen.findByText('Search Results')).toBeInTheDocument();
+  });
+});
+
+describe('MoviesTab - rating display', () => {
+  it('renders rating on movie cards when provided', () => {
+    render(<MoviesTab theme="light" items={[{ id: '1', title: 'Movie A', rating: 8.4 } as any]} />);
+    const ratingNodes = screen.getAllByText((content, node) => (node?.textContent || '').includes('Rating: 8.4/10'));
+    expect(ratingNodes.length).toBeGreaterThan(0);
   });
 });

@@ -8,6 +8,7 @@ export type MovieDoc = {
   overview?: string;
   topCast?: string[];
   imageUrl?: string;
+  rating?: number;
   isFavorite?: boolean;
   createdAt?: any;
   updatedAt?: any;
@@ -18,10 +19,17 @@ export type TvShowDoc = {
   title: string;
   description?: string;
   imageUrl?: string;
+  rating?: number;
   seasonNumber?: number;
   episodeNumber?: number;
   episodeTitle?: string;
   episodeDescription?: string;
+  // Additional TV metadata from TMDB
+  networks?: string[];
+  status?: string;
+  firstAirDate?: string;
+  lastAirDate?: string;
+  nextAirDate?: string;
   createdAt?: any;
   updatedAt?: any;
 };
@@ -34,6 +42,7 @@ export function movieDocFromTMDB(data: any): MovieDoc {
     overview: data?.overview ?? "",
     topCast: Array.isArray(data?.topCast) ? data.topCast : [],
     imageUrl: data?.imageUrl ?? (typeof data?.poster_path === "string" && data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : undefined),
+    rating: typeof data?.rating === 'number' ? data.rating : (typeof data?.vote_average === 'number' ? Number(data.vote_average) : undefined),
     isFavorite: Boolean(data?.isFavorite ?? false),
   };
 }

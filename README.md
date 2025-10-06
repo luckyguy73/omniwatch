@@ -3,7 +3,7 @@
 A responsive web app to track and manage Movies and TV Shows with a clean, fast UI. Built with Next.js App Router, React, Tailwind CSS, Firebase Firestore, and The Movie Database (TMDB) APIs.
 
 • Framework: Next.js 15 (App Router) + React 19
-• Styling: Tailwind CSS v4
+• Styling: Tailwind CSS v4 (using Inter via next/font)
 • Data: Firebase Firestore (client SDK)
 • External API: TMDB (server-side API routes)
 • Tests: Vitest + Testing Library
@@ -17,6 +17,7 @@ A responsive web app to track and manage Movies and TV Shows with a clean, fast 
 - In-app toast notifications (blue theme) that appear at the top and auto-dismiss after 5s
 - Light/Dark theme toggle (dark is default)
 - Mobile-friendly layout and accessible controls (aria-labels, keyboard-friendly)
+- Server-side TMDB API routes for movie/TV details, search, and trending
 
 ## Project Structure
 ```
@@ -84,5 +85,67 @@ Note: Firebase web config values are intentionally public; your Firestore securi
 - Unit tests stub network calls and do not require TMDB or Firebase.
 - During tests, the dashboard avoids Firestore calls (NODE_ENV==='test').
 
+## TMDB capabilities (free tier)
+TMDB provides rich metadata for movies and TV shows on its free tier. Highlights relevant to our app:
+
+- TV details include:
+  - networks: array of networks the show airs on (we expose this as `networks: string[]`)
+  - status: e.g., "Returning Series", "Ended"
+  - firstAirDate / lastAirDate (ISO date strings)
+  - nextAirDate (ISO date string from `next_episode_to_air.air_date` when available)
+  - Note: TMDB typically does not provide a reliable broadcast time-of-day; it mainly includes dates. If you need exact local airtimes by region, you'd need a different source (e.g., a TV guide provider). We are keeping the app on free sources and do not fetch airtimes.
+
+- Trending endpoints: yes, TMDB exposes trending for movies and TV.
+  - Server route we added: `GET /api/tmdb/trending?type=movie|tv&window=day|week`
+  - Returns up to 20 items with: `tmdbId`, `title`, `overview`, `year`, `imageUrl`, `mediaType`, `popularity`, `voteAverage`.
+
+### Client helpers
+You can call these from the client (they hit our server routes):
+
+- `fetchTrendingMovies(window?: 'day'|'week')`
+- `fetchTrendingTvShows(window?: 'day'|'week')`
+- Existing: `searchMovies`, `searchTvShows`, `fetchMovieFromTMDB`, `fetchTvShowFromTMDB` (now includes optional `networks`, `status`, and air date fields for TV).
+
+### Example usage (client)
+```ts
+import { fetchTrendingMovies, fetchTrendingTvShows, fetchTvShowFromTMDB } from '@/lib/tmdb/tmdbClient';
+
+const movies = await fetchTrendingMovies('day');
+const tv = await fetchTrendingTvShows('week');
+const show = await fetchTvShowFromTMDB(93405); // e.g., Yellowstone
+console.log(show.networks, show.status, show.nextAirDate);
+```
+
 ## License
 Private project (no explicit license). Adjust as needed.
+
+
+## Font family (Inter, Roboto, Montserrat)
+
+This project uses Inter (via next/font) as the default sans-serif font. You can switch to another popular font with a tiny change in src/app/layout.tsx.
+
+We now use generic CSS custom properties for font variables:
+- --font-sans (for the primary sans-serif)
+- --font-mono (for the monospaced family)
+
+Steps:
+- Replace the Inter import with your preferred font from next/font/google.
+- Set the variable option to "--font-sans" for the primary font (and "--font-mono" if you change the mono font).
+
+Examples:
+
+Using Roboto:
+
+import { Roboto, Geist_Mono } from "next/font/google";
+const robotoSans = Roboto({ variable: "--font-sans", subsets: ["latin"], weight: ["300","400","500","700"] });
+// ... use robotoSans.variable in the <body> className
+
+Using Montserrat:
+
+import { Montserrat, Geist_Mono } from "next/font/google";
+const montserratSans = Montserrat({ variable: "--font-sans", subsets: ["latin"], weight: ["300","400","500","700"] });
+// ... use montserratSans.variable in the <body> className
+
+Note:
+- The variable names are generic ("--font-sans" / "--font-mono") to avoid confusion and reflect the actual purpose, regardless of the specific font family you choose.
+- If you also want to change the monospaced font, replace Geist_Mono with e.g. Roboto_Mono or JetBrains_Mono and use the variable name "--font-mono".

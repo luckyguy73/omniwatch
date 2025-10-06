@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import TvShowsTab from "../components/TvShowsTab";
 import MoviesTab from "../components/MoviesTab";
-import { fetchMovies, fetchTvShows } from "../lib/firestore/data";
+import { fetchMovies, fetchTvShows } from "@/lib/firestore/data";
 
 // Define the dashboard item type
 export type DashboardItem = {
@@ -30,7 +30,7 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    // Skip Firestore calls in test environment to keep unit tests fast and isolated
+    // Skip Firestore calls in the test environment to keep unit tests fast and isolated
     if (process.env.NODE_ENV === 'test') {
       return;
     }

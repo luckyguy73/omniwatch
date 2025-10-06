@@ -16,6 +16,7 @@ vi.mock('../../lib/tmdb/tmdbClient', () => ({
     ],
   })),
   fetchTvShowFromTMDB: vi.fn(async () => ({ tmdbId: 100, title: 'Severance' })),
+  fetchTrendingTvShows: vi.fn(async () => ({ results: [ { tmdbId: 200, title: 'Trending Show' } ] })),
 }));
 
 describe('TvShowsTab', () => {
@@ -139,6 +140,15 @@ describe('TvShowsTab', () => {
   });
 });
 
+it('clears search when pressing Escape key', () => {
+  render(<TvShowsTab theme="light" />);
+  const input = screen.getByPlaceholderText(/Search TV shows to add/i) as HTMLInputElement;
+  fireEvent.change(input, { target: { value: 'sev' } });
+  expect(input.value).toBe('sev');
+  fireEvent.keyDown(input, { key: 'Escape', code: 'Escape' });
+  expect(input.value).toBe('');
+});
+
 // Additional coverage tests for TV search suggestions and year display
 
 describe('TvShowsTab - search suggestions UX', () => {
@@ -181,5 +191,36 @@ describe('TvShowsTab - search suggestions UX', () => {
     vi.useRealTimers();
 
     expect(await screen.findByText('Severance (2022)')).toBeInTheDocument();
+  });
+});
+
+
+
+describe('TvShowsTab - Trending vs Search headings', () => {
+  it('shows Trending when input is focused and empty', async () => {
+    render(<TvShowsTab theme="light" />);
+    const input = screen.getByPlaceholderText(/Search TV shows to add/i);
+    fireEvent.focus(input);
+    expect(await screen.findByText('Trending')).toBeInTheDocument();
+  });
+
+  it('shows Search Results after typing', async () => {
+    vi.useFakeTimers();
+    render(<TvShowsTab theme="light" />);
+    const input = screen.getByPlaceholderText(/Search TV shows to add/i);
+    fireEvent.change(input, { target: { value: 'sev' } });
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+    vi.useRealTimers();
+    expect(await screen.findByText('Search Results')).toBeInTheDocument();
+  });
+});
+
+describe('TvShowsTab - rating display', () => {
+  it('renders rating on TV show cards when provided', () => {
+    render(<TvShowsTab theme="light" items={[{ id: '1', title: 'Show A', rating: 7.2 } as any]} />);
+    const ratingNodes = screen.getAllByText((content, node) => (node?.textContent || '').includes('Rating: 7.2/10'));
+    expect(ratingNodes.length).toBeGreaterThan(0);
   });
 });

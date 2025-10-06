@@ -57,7 +57,7 @@ export default function Dashboard() {
               `text-3xl sm:text-4xl font-bold ${theme === "dark" ? "text-blue-200" : "text-blue-700"}`
             }
           >
-            Omni Dashboard
+            OmniWatch
           </h1>
           <button
             onClick={toggleTheme}

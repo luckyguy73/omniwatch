@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Omni Dashboard
 
-## Getting Started
+A responsive web app to track and manage Movies and TV Shows with a clean, fast UI. Built with Next.js App Router, React, Tailwind CSS, Firebase Firestore, and The Movie Database (TMDB) APIs.
 
-First, run the development server:
+• Framework: Next.js 15 (App Router) + React 19
+• Styling: Tailwind CSS v4
+• Data: Firebase Firestore (client SDK)
+• External API: TMDB (server-side API routes)
+• Tests: Vitest + Testing Library
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+- Two tabs: TV Shows and Movies
+- Live, debounced search-as-you-type (300ms) with up to 10 suggestions
+- Suggestions show title and year; add via a green “+” button
+- Add and Remove items (Remove uses a consistent square red X button at the far-left of the title)
+- Items sorted alphabetically by title (case-insensitive)
+- In-app toast notifications (blue theme) that appear at the top and auto-dismiss after 5s
+- Light/Dark theme toggle (dark is default)
+- Mobile-friendly layout and accessible controls (aria-labels, keyboard-friendly)
+
+## Project Structure
+```
+src/
+  app/
+    api/
+      tmdb/
+        _shared.ts            # server utilities for TMDB handlers
+        movie/route.ts        # GET /api/tmdb/movie?id=...
+        tv/route.ts           # GET /api/tmdb/tv?id=...
+        search/route.ts       # GET /api/tmdb/search?type=movie|tv&query=...
+    layout.tsx
+    page.tsx                  # Dashboard (tabs, theme, data loading)
+  components/
+    MoviesTab.tsx
+    TvShowsTab.tsx
+    __tests__/                # Vitest + Testing Library tests
+  lib/
+    firestore/
+      firebase.ts             # Firebase app init (client SDK)
+      data.ts                 # fetchMovies/fetchTvShows (Firestore reads)
+      models.ts               # upsert/delete helpers + types
+    tmdb/
+      tmdbClient.ts           # client helpers calling our Next.js API routes
+    util/
+      index.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
+The app uses both server-only and public env vars.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Server-only (do NOT prefix with NEXT_PUBLIC):
+- TMDB_API_KEY
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Public (exposed to the browser via NEXT_PUBLIC_):
+- NEXT_PUBLIC_FIREBASE_API_KEY
+- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+- NEXT_PUBLIC_FIREBASE_PROJECT_ID
+- NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+- NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+- NEXT_PUBLIC_FIREBASE_APP_ID
 
-## Learn More
+Note: Firebase web config values are intentionally public; your Firestore security relies on Firestore Rules, not secrecy of these values.
 
-To learn more about Next.js, take a look at the following resources:
+## Local Development
+1. Install dependencies:
+   - npm install
+2. Set up a .env.local with the variables listed above.
+3. Start the dev server:
+   - npm run dev
+4. Open http://localhost:3000
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing
+- Run all tests:
+  - npm test
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment (Vercel)
+- Import the repo into Vercel (Git integration).
+- Set Environment Variables (Production and optionally Preview) using the list above.
+- Deploy. Vercel will run `next build` and host the app. API routes run as serverless functions.
+- To auto-deploy on push, ensure your project is connected to the Git repo and the Production Branch is set to `main` in Project Settings → Git.
 
-## Deploy on Vercel
+## Notes & Gotchas
+- TMDB_API_KEY is required by the server-side API routes; without it, search/details API endpoints will return errors at runtime.
+- Unit tests stub network calls and do not require TMDB or Firebase.
+- During tests, the dashboard avoids Firestore calls (NODE_ENV==='test').
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+Private project (no explicit license). Adjust as needed.

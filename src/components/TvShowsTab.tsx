@@ -11,7 +11,7 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
 
   function showToast(msg: string) {
     setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 5000);
   }
 
   useEffect(() => {
@@ -62,12 +62,11 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
       <h2 className={`text-xl font-semibold mb-4 ${theme === "dark" ? "text-blue-200" : "text-gray-800"}`}>Your TV Shows</h2>
 
       {toast ? (
-        <div className={
-          `mb-4 px-3 py-2 rounded border text-sm ` +
-          (theme === "dark"
-            ? "bg-gray-800 text-blue-200 border-gray-700"
-            : "bg-blue-50 text-blue-800 border-blue-200")
-        } role="status" aria-live="polite">{toast}</div>
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center" role="status" aria-live="polite">
+          <div className="mt-2 px-4 py-2 rounded border text-sm shadow bg-blue-600 text-white border-blue-500">
+            {toast}
+          </div>
+        </div>
       ) : null}
 
       {/* Search */}
@@ -123,12 +122,12 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
                   </div>
                   <button
                     type="button"
+                    aria-label="Add"
                     onClick={() => handleAdd(r.tmdbId)}
                     className={
-                      `px-3 py-1 rounded text-sm font-medium border ` +
-                      (theme === "dark" ? "bg-gray-700 text-blue-200 border-gray-600 hover:bg-gray-600" : "bg-white text-blue-700 border-gray-300 hover:bg-gray-200")
+                      `px-3 py-1 rounded text-sm font-medium border bg-green-600 text-white border-green-600 hover:bg-green-700`
                     }
-                  >Add</button>
+                  >+</button>
                 </div>
               </li>
             ))}

@@ -120,7 +120,7 @@ describe('TvShowsTab', () => {
     await screen.findByText('search failed');
   });
 
-  it('schedules auto-dismiss toast after 3 seconds', async () => {
+  it('schedules auto-dismiss toast after 5 seconds', async () => {
     const spy = vi.spyOn(global, 'setTimeout' as any);
     render(<TvShowsTab theme="light" />);
 
@@ -132,8 +132,8 @@ describe('TvShowsTab', () => {
     await screen.findByRole('status');
 
     expect(spy).toHaveBeenCalled();
-    const any3000 = spy.mock.calls.some((c) => typeof c[1] === 'number' && c[1] === 3000);
-    expect(any3000).toBe(true);
+    const any5000 = spy.mock.calls.some((c) => typeof c[1] === 'number' && c[1] === 5000);
+    expect(any5000).toBe(true);
 
     spy.mockRestore();
   });

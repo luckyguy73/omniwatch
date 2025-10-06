@@ -1,4 +1,4 @@
-# Omni Dashboard
+# OmniWatch
 
 A responsive web app to track and manage Movies and TV Shows with a clean, fast UI. Built with Next.js App Router, React, Tailwind CSS, Firebase Firestore, and The Movie Database (TMDB) APIs.
 

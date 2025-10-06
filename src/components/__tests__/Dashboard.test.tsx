@@ -5,7 +5,7 @@ import Dashboard from '../../app/page';
 describe('Dashboard', () => {
   it('renders dashboard heading', () => {
     render(<Dashboard />);
-    expect(screen.getByText(/Omni Dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/OmniWatch/i)).toBeInTheDocument();
   });
 
   it('toggles theme between dark and light', () => {

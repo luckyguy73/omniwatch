@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Omni Dashboard",
+  title: "OmniWatch",
   description: "Movies and TV tracker",
 };
 

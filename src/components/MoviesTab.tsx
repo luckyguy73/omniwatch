@@ -69,6 +69,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
       showToast(`Added: ${movie.title}`);
       onDataChanged?.();
     } catch (err: any) {
+      console.error('Movie add error:', err);
       showToast(`Add failed: ${err?.message ?? "Unknown error"}`);
     }
   }
@@ -91,8 +92,13 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
       <h2 className={`text-xl font-semibold mb-4 text-center sm:text-left ${theme === "dark" ? "text-blue-200" : "text-gray-800"}`}>Your Movies</h2>
 
       {toast ? (
-        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center" role="status" aria-live="polite">
-          <div className="mt-2 px-4 py-2 rounded border text-sm shadow bg-blue-600 text-white border-blue-500">
+        <div 
+          className="fixed top-0 left-0 right-0 z-[9999] flex justify-center pointer-events-none" 
+          role="status" 
+          aria-live="polite"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }}
+        >
+          <div className="mt-2 px-4 py-2 rounded border text-sm shadow bg-blue-600 text-white border-blue-500 pointer-events-auto">
             {toast}
           </div>
         </div>
@@ -158,7 +164,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleAdd(r.tmdbId)}
                     className={
-                      `px-3 py-1 rounded text-sm font-medium border bg-green-600 text-white border-green-600 hover:bg-green-700`
+                      `px-1 py-0 rounded text-2xl font-medium border bg-green-600 text-white border-green-600 hover:bg-green-700 leading-none`
                     }
                   >+</button>
                 </div>

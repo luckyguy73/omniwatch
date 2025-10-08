@@ -20,14 +20,22 @@ export const metadata: Metadata = {
   description: "Movies and TV tracker",
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
-      { url: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+      { url: '/favicon.svg?v=2', type: 'image/svg+xml' },
+      { url: '/icon-192.svg?v=2', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/icon-512.svg?v=2', sizes: '512x512', type: 'image/svg+xml' },
     ],
     apple: [
-      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/icon-192.svg?v=2', sizes: '192x192', type: 'image/svg+xml' },
     ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/favicon.svg',
+        color: '#151e2e'
+      }
+    ]
   },
+  manifest: '/manifest.json',
 };
 
 export const viewport = {

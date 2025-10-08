@@ -98,7 +98,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
           aria-live="polite"
           style={{
             position: 'fixed',
-            top: 'max(env(safe-area-inset-top), 1rem)',
+            top: '1rem',
             left: 0,
             right: 0,
             zIndex: 9999,
@@ -106,7 +106,10 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
             WebkitTransform: 'translate3d(0, 0, 0)',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
-            willChange: 'transform'
+            willChange: 'transform',
+            // Force iOS Safari to respect viewport positioning
+            WebkitOverflowScrolling: 'touch',
+            isolation: 'isolate'
           }}
         >
           <div className="px-4 py-2 rounded border text-sm shadow bg-blue-600 text-white border-blue-500 pointer-events-auto">

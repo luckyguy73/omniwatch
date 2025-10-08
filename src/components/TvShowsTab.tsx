@@ -85,7 +85,7 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
 
   return (
     <div>
-      <h2 className={`text-xl font-semibold mb-4 ${theme === "dark" ? "text-blue-200" : "text-gray-800"}`}>Your TV Shows</h2>
+      <h2 className={`text-xl font-semibold mb-4 text-center sm:text-left ${theme === "dark" ? "text-blue-200" : "text-gray-800"}`}>Your TV Shows</h2>
 
       {toast ? (
         <div className="fixed top-0 left-0 right-0 z-50 flex justify-center" role="status" aria-live="polite">

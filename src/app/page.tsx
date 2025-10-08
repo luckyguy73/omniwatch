@@ -78,7 +78,7 @@ export default function Dashboard() {
         }
       >
         <div className="max-w-4xl mx-auto">
-          <div className="relative flex justify-center items-center mb-8">
+          <div className="flex justify-center sm:justify-between items-center mb-8">
             <h1
               className={
                 `text-3xl sm:text-4xl font-bold ${theme === "dark" ? "text-blue-200" : "text-blue-700"}`
@@ -86,11 +86,11 @@ export default function Dashboard() {
             >
               OmniWatch
             </h1>
-            <div className="absolute right-0 flex items-center gap-3">
+            <div className="flex items-center gap-3 absolute right-0 sm:relative sm:right-auto">
               <UserProfile theme={theme} onThemeToggle={toggleTheme} />
             </div>
           </div>
-        <div className="flex gap-4 mb-8">
+        <div className="flex justify-center sm:justify-start gap-4 mb-8">
           <button
             className={`px-6 py-2 rounded-t-lg font-medium transition-colors duration-200 border-b-2 ` +
               (activeTab === "tv"

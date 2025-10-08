@@ -92,7 +92,17 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
           className="fixed top-0 left-0 right-0 z-[9999] flex justify-center pointer-events-none" 
           role="status" 
           aria-live="polite"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 9999,
+            transform: 'translateZ(0)', // Force hardware acceleration
+            backfaceVisibility: 'hidden', // Mobile Safari optimization
+            WebkitBackfaceVisibility: 'hidden',
+            WebkitTransform: 'translateZ(0)'
+          }}
         >
           <div className="mt-2 px-4 py-2 rounded border text-sm shadow bg-blue-600 text-white border-blue-500 pointer-events-auto">
             {toast}

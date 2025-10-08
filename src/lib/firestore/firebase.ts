@@ -1,4 +1,5 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -10,6 +11,17 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID as string,
 };
 
-// Ensure we don’t re-initialize the app in client HMR or testing contexts
+// Initialize Firebase (avoid re-initialization in development HMR)
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// Export Firebase services
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+// Configure Google Auth Provider
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+  // Reduce popup-related warnings
+  display: 'popup'
+});

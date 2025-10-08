@@ -1,6 +1,17 @@
-# OmniWatch
-
-A responsive web app to track and manage Movies and TV Shows with a clean, fast UI. Built with Next.js App Router, React, Tailwind CSS, Firebase Firestore, and The Movie Database (TMDB) APIs.
+# OmniWatc## Features
+- **User Authentication**: Google Sign-In with Firebase Auth for personalized experience
+- **Normalized Data Structure**: Efficient storage with no duplicate movie/TV data across users
+- **User-specific Watchlists**: Personal ratings, notes, and watch status for each user
+- **Data Deduplication**: Same movie stored once globally, referenced by multiple users
+- Two tabs: TV Shows and Movies
+- Live, debounced search-as-you-type (300ms) with up to 10 suggestions
+- Suggestions show title and year; add via a green "+" button
+- Add and Remove items (Remove uses a consistent square red X button at the far-left of the title)
+- Items sorted alphabetically by title (case-insensitive)
+- In-app toast notifications (blue theme) that appear at the top and auto-dismiss after 5s
+- Light/Dark theme toggle (dark is default)
+- Mobile-friendly layout and accessible controls (aria-labels, keyboard-friendly)
+- Server-side TMDB API routes for movie/TV details, search, and trendingnsive web app to track and manage Movies and TV Shows with a clean, fast UI. Built with Next.js App Router, React, Tailwind CSS, Firebase Firestore, and The Movie Database (TMDB) APIs.
 
 • Framework: Next.js 15 (App Router) + React 19
 • Styling: Tailwind CSS v4 (using Inter via next/font)
@@ -29,17 +40,25 @@ src/
         movie/route.ts        # GET /api/tmdb/movie?id=...
         tv/route.ts           # GET /api/tmdb/tv?id=...
         search/route.ts       # GET /api/tmdb/search?type=movie|tv&query=...
-    layout.tsx
+    layout.tsx                # Root layout with AuthProvider
     page.tsx                  # Dashboard (tabs, theme, data loading)
   components/
+    GoogleSignIn.tsx          # Google authentication component
+    UserProfile.tsx           # User profile dropdown with sign out
+    ProtectedRoute.tsx        # Route wrapper requiring authentication
     MoviesTab.tsx
     TvShowsTab.tsx
     __tests__/                # Vitest + Testing Library tests
   lib/
+    auth/
+      AuthContext.tsx         # Firebase Auth context and hooks
     firestore/
-      firebase.ts             # Firebase app init (client SDK)
-      data.ts                 # fetchMovies/fetchTvShows (Firestore reads)
+      firebase.ts             # Firebase app init (client SDK with Auth)
+      data.ts                 # fetchMovies/fetchTvShows (legacy global collections)
+      userdata.ts             # Normalized user-specific CRUD operations with global deduplication
       models.ts               # upsert/delete helpers + types
+    hooks/
+      useUserData.ts          # Custom hooks for user data management
     tmdb/
       tmdbClient.ts           # client helpers calling our Next.js API routes
     util/
@@ -61,6 +80,53 @@ Public (exposed to the browser via NEXT_PUBLIC_):
 - NEXT_PUBLIC_FIREBASE_APP_ID
 
 Note: Firebase web config values are intentionally public; your Firestore security relies on Firestore Rules, not secrecy of these values.
+
+## Firebase Setup
+
+### 1. Create Firebase Project
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Create a project" or use an existing one
+3. Follow the setup wizard
+
+### 2. Enable Authentication
+1. In Firebase Console, navigate to **Authentication** → **Sign-in method**
+2. Click on **Google** provider and enable it
+3. Add your domain to **Authorized domains** (add `localhost` for development)
+4. Save the configuration
+
+### 3. Set up Firestore Database
+1. In Firebase Console, go to **Firestore Database**
+2. Click **Create database**
+3. Choose **Start in test mode** for development (update security rules later)
+4. Select a location for your database
+
+### 4. Get Configuration
+1. Go to **Project Settings** → **General** tab
+2. Scroll to "Your apps" and click **Web app** (</>) icon
+3. Register your app with a name
+4. Copy the configuration values to your `.env.local` file
+
+### 5. Security Rules (Important!)
+Update your Firestore security rules to ensure user data isolation:
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only access their own data
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Legacy global collections (optional, for migration)
+    match /movies/{document} {
+      allow read, write: if request.auth != null;
+    }
+    match /tv_shows/{document} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
 
 ## Local Development
 1. Install dependencies:

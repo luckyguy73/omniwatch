@@ -1,12 +1,23 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import TvShowsTab from '../TvShowsTab';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { searchTvShows } from '../../lib/tmdb/tmdbClient';
+import TvShowsTab from '../TvShowsTab';
 
 vi.mock('../../lib/firestore/models', () => ({
   upsertTvShow: vi.fn(() => Promise.resolve()),
   deleteTvShow: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('../../lib/firestore/userdata', () => ({
+  addTvShowToUser: vi.fn(() => Promise.resolve()),
+  removeTvShowFromUser: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('../../lib/auth/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: { uid: 'test-user', displayName: 'Test User', email: 'test@example.com' },
+    loading: false,
+  })),
 }));
 
 vi.mock('../../lib/tmdb/tmdbClient', () => ({

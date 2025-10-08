@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import TvShowsTab from "../components/TvShowsTab";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { fetchUserMovies, fetchUserTvShows, getUserData, updateUserTheme } from "@/lib/firestore/userdata";
+import { useEffect, useState } from "react";
 import MoviesTab from "../components/MoviesTab";
-import { fetchMovies, fetchTvShows } from "@/lib/firestore/data";
+import ProtectedRoute from "../components/ProtectedRoute";
+import TvShowsTab from "../components/TvShowsTab";
+import UserProfile from "../components/UserProfile";
 
 // Define the dashboard item type
 export type DashboardItem = {
@@ -15,63 +18,78 @@ export type DashboardItem = {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("tv");
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState<'light' | 'dark'>("dark");
   const [tvShows, setTvShows] = useState<DashboardItem[]>([]);
   const [movies, setMovies] = useState<DashboardItem[]>([]);
+  const { user } = useAuth();
 
   async function reload() {
+    if (!user) return;
+    
     const [tv, mv] = await Promise.all([
-      fetchTvShows(),
-      fetchMovies(),
+      fetchUserTvShows(user),
+      fetchUserMovies(user),
     ]);
     // Casting to any to keep compatibility with current component prop types
     setTvShows(tv as any);
     setMovies(mv as any);
   }
 
+  // Load user's theme preference
+  useEffect(() => {
+    if (!user) return;
+    
+    getUserData(user)
+      .then(userData => setTheme(userData.theme === 'system' ? 'dark' : userData.theme))
+      .catch(err => console.error('Error loading user theme:', err));
+  }, [user]);
+
   useEffect(() => {
     // Skip Firestore calls in the test environment to keep unit tests fast and isolated
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'test' || !user) {
       return;
     }
     reload()
       .then(() => console.log('Data loaded'))
       .catch(err => console.error('Error loading data:', err));
-  }, []);
+  }, [user]); // Re-run when user changes
 
-  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
+  const toggleTheme = async () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    
+    if (user) {
+      try {
+        await updateUserTheme(user, newTheme);
+      } catch (err) {
+        console.error('Error saving theme:', err);
+      }
+    }
+  };
 
   return (
-    <div
-      className={
-        `min-h-screen p-4 sm:p-6 md:p-8 transition-colors duration-300 ` +
-        (theme === "dark"
-          ? "bg-gradient-to-br from-gray-900 to-gray-800"
-          : "bg-gradient-to-br from-blue-50 to-gray-100")
-      }
-    >
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1
-            className={
-              `text-3xl sm:text-4xl font-bold ${theme === "dark" ? "text-blue-200" : "text-blue-700"}`
-            }
-          >
-            OmniWatch
-          </h1>
-          <button
-            onClick={toggleTheme}
-            className={
-              `w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-200 font-medium border text-xl shadow ` +
-              (theme === "dark"
-                ? "bg-gray-700 text-blue-200 border-gray-600 hover:bg-gray-600"
-                : "bg-gray-200 text-blue-700 border-gray-300 hover:bg-gray-300")
-            }
-            aria-label="Toggle light/dark mode"
-          >
-            {theme === "dark" ? "🌙" : "☀️"}
-          </button>
-        </div>
+    <ProtectedRoute theme={theme}>
+      <div
+        className={
+          `min-h-screen p-4 sm:p-6 md:p-8 transition-colors duration-300 ` +
+          (theme === "dark"
+            ? "bg-gradient-to-br from-gray-900 to-gray-800"
+            : "bg-gradient-to-br from-blue-50 to-gray-100")
+        }
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="relative flex justify-center items-center mb-8">
+            <h1
+              className={
+                `text-3xl sm:text-4xl font-bold ${theme === "dark" ? "text-blue-200" : "text-blue-700"}`
+              }
+            >
+              OmniWatch
+            </h1>
+            <div className="absolute right-0 flex items-center gap-3">
+              <UserProfile theme={theme} onThemeToggle={toggleTheme} />
+            </div>
+          </div>
         <div className="flex gap-4 mb-8">
           <button
             className={`px-6 py-2 rounded-t-lg font-medium transition-colors duration-200 border-b-2 ` +
@@ -110,5 +128,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

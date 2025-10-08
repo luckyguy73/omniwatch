@@ -1,12 +1,23 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import MoviesTab from '../MoviesTab';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { searchMovies } from '../../lib/tmdb/tmdbClient';
+import MoviesTab from '../MoviesTab';
 
 vi.mock('../../lib/firestore/models', () => ({
   deleteMovie: vi.fn(() => Promise.resolve()),
   upsertMovie: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('../../lib/firestore/userdata', () => ({
+  addMovieToUser: vi.fn(() => Promise.resolve()),
+  removeMovieFromUser: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('../../lib/auth/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: { uid: 'test-user', displayName: 'Test User', email: 'test@example.com' },
+    loading: false,
+  })),
 }));
 
 vi.mock('../../lib/tmdb/tmdbClient', () => ({

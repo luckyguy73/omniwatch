@@ -1,7 +1,8 @@
+import { AuthProvider } from "@/lib/auth/AuthContext";
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { Geist_Mono, Inter } from "next/font/google";
 import React from "react";
+import "./globals.css";
 
 // Use Inter (popular sans-serif) and set generic CSS variable names for clarity
 const interSans = Inter({
@@ -17,6 +18,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "OmniWatch",
   description: "Movies and TV tracker",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 export const viewport = {
@@ -34,7 +45,9 @@ export default function RootLayout({
       <body
         className={`${interSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

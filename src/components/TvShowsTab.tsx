@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { searchTvShows, fetchTvShowFromTMDB, fetchTrendingTvShows } from "@/lib/tmdb/tmdbClient";
-import { upsertTvShow, deleteTvShow } from "@/lib/firestore/models";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { upsertTvShow } from "@/lib/firestore/models";
+import { addTvShowToUser, removeTvShowFromUser } from "@/lib/firestore/userdata";
+import { fetchTrendingTvShows, fetchTvShowFromTMDB, searchTvShows } from "@/lib/tmdb/tmdbClient";
+import { useEffect, useState } from 'react';
 
 export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme: string; items?: any[]; onDataChanged?: () => void }) {
   const [q, setQ] = useState("");
@@ -9,6 +11,7 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
   const [focused, setFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const { user } = useAuth();
 
   function showToast(msg: string) {
     setToast(msg);
@@ -52,9 +55,14 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
   }, [q, focused]);
 
   async function handleAdd(tmdbId: number) {
+    if (!user) return;
+    
     try {
       const show = await fetchTvShowFromTMDB(tmdbId);
+      // Add to global collection
       await upsertTvShow(show);
+      // Add to user's watchlist
+      await addTvShowToUser(user, tmdbId);
       showToast(`Added: ${show.title}`);
       onDataChanged?.();
     } catch (err: any) {
@@ -63,9 +71,11 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
   }
 
   async function handleRemove(item: any) {
-    if (!item?.tmdbId) return;
+    if (!item?.tmdbId || !user) return;
+    
     try {
-      await deleteTvShow(item.tmdbId);
+      // Remove from user's watchlist (keep in global collection for other users)
+      await removeTvShowFromUser(user, item.tmdbId);
       showToast(`Removed: ${item.title}`);
       onDataChanged?.();
     } catch (err: any) {

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { searchMovies, fetchMovieFromTMDB, fetchTrendingMovies } from "@/lib/tmdb/tmdbClient";
-import { upsertMovie, deleteMovie } from "@/lib/firestore/models";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { upsertMovie } from "@/lib/firestore/models";
+import { addMovieToUser, removeMovieFromUser } from "@/lib/firestore/userdata";
+import { fetchMovieFromTMDB, fetchTrendingMovies, searchMovies } from "@/lib/tmdb/tmdbClient";
+import { useEffect, useState } from 'react';
 
 export default function MoviesTab({ theme, items = [], onDataChanged }: { theme: string; items?: any[]; onDataChanged?: () => void }) {
   const [q, setQ] = useState("");
@@ -8,6 +10,7 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
   const [toast, setToast] = useState<string | null>(null);
 
   function showToast(msg: string) {
@@ -55,9 +58,14 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
   }, [q, focused]);
 
   async function handleAdd(tmdbId: number) {
+    if (!user) return;
+    
     try {
       const movie = await fetchMovieFromTMDB(tmdbId);
+      // Add to global collection
       await upsertMovie({ ...movie });
+      // Add to user's watchlist
+      await addMovieToUser(user, tmdbId);
       showToast(`Added: ${movie.title}`);
       onDataChanged?.();
     } catch (err: any) {
@@ -66,9 +74,11 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
   }
 
   async function handleRemove(item: any) {
-    if (!item?.tmdbId) return;
+    if (!item?.tmdbId || !user) return;
+    
     try {
-      await deleteMovie(item.tmdbId);
+      // Remove from user's watchlist (keep in global collection for other users)
+      await removeMovieFromUser(user, item.tmdbId);
       showToast(`Removed: ${item.title}`);
       onDataChanged?.();
     } catch (err: any) {

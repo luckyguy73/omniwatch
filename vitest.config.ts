@@ -6,6 +6,9 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic', // Enable automatic JSX runtime (React 17+)
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

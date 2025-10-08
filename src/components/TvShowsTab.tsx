@@ -63,7 +63,21 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
       await upsertTvShow(show);
       // Add to user's watchlist
       await addTvShowToUser(user, tmdbId);
-      showToast(`Added: ${show.title}`);
+      
+      // Clean up UI after successful add
+      setQ("");
+      setResults([]);
+      setError(null);
+      setFocused(false);
+      
+      // Remove focus from search input and scroll instantly to top
+      (document.activeElement as HTMLElement)?.blur();
+      window.scrollTo({ top: 0 });
+      
+      // Delay snackbar until after scroll completes
+      setTimeout(() => {
+        showToast(`Added: ${show.title}`);
+      }, 250);
       onDataChanged?.();
     } catch (err: any) {
       showToast(`Add failed: ${err?.message ?? "Unknown error"}`);
@@ -88,27 +102,8 @@ export default function TvShowsTab({ theme, items = [], onDataChanged }: { theme
       <h2 className={`text-xl font-semibold mb-4 text-center sm:text-left ${theme === "dark" ? "text-blue-200" : "text-gray-800"}`}>Your TV Shows</h2>
 
       {toast ? (
-        <div 
-          className="fixed left-0 right-0 z-[9999] flex justify-center pointer-events-none" 
-          role="status" 
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            top: '1rem',
-            left: 0,
-            right: 0,
-            zIndex: 9999,
-            transform: 'translate3d(0, 0, 0)',
-            WebkitTransform: 'translate3d(0, 0, 0)',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            willChange: 'transform',
-            // Force iOS Safari to respect viewport positioning
-            WebkitOverflowScrolling: 'touch',
-            isolation: 'isolate'
-          }}
-        >
-          <div className="px-4 py-2 rounded border text-sm shadow bg-blue-600 text-white border-blue-500 pointer-events-auto">
+        <div className="fixed top-12 left-0 right-0 z-[9999] flex justify-center" role="status" aria-live="polite">
+          <div className="px-4 py-2 rounded border text-sm shadow bg-blue-600 text-white border-blue-500">
             {toast}
           </div>
         </div>

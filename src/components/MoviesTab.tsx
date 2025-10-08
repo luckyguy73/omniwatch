@@ -60,6 +60,14 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
   async function handleAdd(tmdbId: number) {
     if (!user) return;
     
+    // Immediate UI cleanup for instant response
+    setQ("");
+    setResults([]);
+    setError(null);
+    setFocused(false);
+    (document.activeElement as HTMLElement)?.blur();
+    window.scrollTo({ top: 0 });
+    
     try {
       const movie = await fetchMovieFromTMDB(tmdbId);
       // Add to global collection
@@ -67,21 +75,13 @@ export default function MoviesTab({ theme, items = [], onDataChanged }: { theme:
       // Add to user's watchlist
       await addMovieToUser(user, tmdbId);
       
-      // Clean up UI after successful add
-      setQ("");
-      setResults([]);
-      setError(null);
-      setFocused(false);
+      // Refresh the list first, then show confirmation
+      onDataChanged?.();
       
-      // Remove focus from search input and scroll instantly to top
-      (document.activeElement as HTMLElement)?.blur();
-      window.scrollTo({ top: 0 });
-      
-      // Delay snackbar until after scroll completes
+      // Small delay to let the UI update before showing snackbar
       setTimeout(() => {
         showToast(`Added: ${movie.title}`);
-      }, 250);
-      onDataChanged?.();
+      }, 200);
     } catch (err: any) {
       console.error('Movie add error:', err);
       showToast(`Add failed: ${err?.message ?? "Unknown error"}`);

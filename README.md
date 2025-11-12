@@ -146,6 +146,31 @@ service cloud.firestore {
 - Deploy. Vercel will run `next build` and host the app. API routes run as serverless functions.
 - To auto-deploy on push, ensure your project is connected to the Git repo and the Production Branch is set to `main` in Project Settings → Git.
 
+### Firestore Rules (authentication required for reads and writes)
+If you want ALL access to Firestore (reads and writes) to require authentication, this project includes rules and client code to support that with no extra UX by using Anonymous Auth.
+
+1) Enable Anonymous Auth in Firebase Console (required)
+- Firebase Console → Build → Authentication → Sign-in method → Enable Anonymous → Save.
+
+2) Deploy the new rules to Firestore
+- Open `firestore.rules` in the project root. These rules require authentication for reads and writes on the `movies` and `tv_shows` collections, with basic field validation. All other paths are denied.
+- Deploy via Console:
+  - Firebase Console → Build → Firestore Database → Rules → Replace all content with the contents of `firestore.rules` → Publish.
+- Or deploy via Firebase CLI:
+  - Ensure you have the CLI: `npm i -g firebase-tools`
+  - Login and pick your project: `firebase login` then `firebase use <your-project-id>`
+  - Initialize (if not already): `firebase init firestore` (choose existing project; when asked about rules file, point to `firestore.rules`)
+  - Deploy only rules: `firebase deploy --only firestore:rules`
+
+3) How the client satisfies the rules automatically
+- The client initializes Firebase Auth and signs in anonymously on first load in the browser; reads and writes will then be authorized. See `src/lib/firestore/firebase.ts`.
+- No SSR reads are performed; all Firestore access in this app happens client-side after auth.
+
+4) Commit and push the rules to Git
+- Stage changes: `git add firestore.rules README.md src/lib/firestore/firebase.ts`
+- Commit: `git commit -m "Require auth for Firestore reads and writes; enable anonymous client sign-in; update rules/docs"`
+- Push: `git push origin main` (or your active branch)
+
 ## Notes & Gotchas
 - TMDB_API_KEY is required by the server-side API routes; without it, search/details API endpoints will return errors at runtime.
 - Unit tests stub network calls and do not require TMDB or Firebase.

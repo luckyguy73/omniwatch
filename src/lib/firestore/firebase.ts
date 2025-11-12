@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import {getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -25,3 +25,16 @@ googleProvider.setCustomParameters({
   // Reduce popup-related warnings
   display: 'popup'
 });
+
+// Lightweight, zero-UX auth: sign in anonymously so Firestore Rules that require
+// authentication will allow writes. We avoid doing this in test to keep unit tests isolated.
+
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+  // Only attempt sign-in on the client; SSR doesn't need it, and the Firestore client is only used in the browser.
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      // Fire and forget; errors will be surfaced by Firestore operations if rules block access.
+      signInAnonymously(auth).catch(() => {/* no-op */});
+    }
+  });
+}
